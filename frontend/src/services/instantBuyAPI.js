@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiUrl = 'http://127.0.0.1:8000/api';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 // Configure axios to disable caching
 axios.defaults.headers.common['Cache-Control'] = 'no-cache';

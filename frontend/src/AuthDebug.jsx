@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getMarketplaceProducts } from './services/instantBuyAPI';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const AuthDebug = () => {
   const [authState, setAuthState] = useState({
     token: null,
@@ -23,7 +25,7 @@ const AuthDebug = () => {
 
   const testLogin = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/login', {
+      const response = await fetch(`${apiUrl}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -38,7 +40,7 @@ const AuthDebug = () => {
         localStorage.setItem('token', data.token);
         
         // Fetch user info
-        const userRes = await fetch('http://127.0.0.1:8000/api/user', {
+        const userRes = await fetch(`${apiUrl}/user`, {
           headers: { Authorization: `Bearer ${data.token}` }
         });
         const userData = await userRes.json();

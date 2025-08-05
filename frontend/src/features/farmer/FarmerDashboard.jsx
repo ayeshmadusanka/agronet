@@ -5,7 +5,7 @@ import { handleLogout } from '../../utils/authUtils';
 import DashboardLayout from '../../components/DashboardLayout';
 import InstantBuy from './InstantBuy';
 
-const apiUrl = 'http://127.0.0.1:8000/api';
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const FarmerDashboard = () => {
   const [farmer, setFarmer] = useState(null);

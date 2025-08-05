@@ -24,7 +24,7 @@ const Login = ({ onLogin, switchToRegister }) => {
       localStorage.setItem('token', res.data.token);
 
       // Fetch user info to get the role
-      const userRes = await fetch('http://127.0.0.1:8000/api/user', {
+      const userRes = await fetch(`${process.env.REACT_APP_API_URL}/user`, {
         headers: { Authorization: `Bearer ${res.data.token}` }
       });
       const userData = await userRes.json();
