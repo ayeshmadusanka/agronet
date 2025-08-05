@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+// Global OPTIONS handler for all preflight requests
+Route::options('{any}', function () {
+    return response()->json([], 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+})->where('any', '.*');
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return response()->json($request->user());
@@ -53,6 +61,14 @@ Route::post('/register', function (Request $request) {
 
 
 
+// Handle preflight requests for login
+Route::options('/login', function () {
+    return response()->json([], 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+});
+
 // Login
 Route::post('/login', function (Request $request) {
     $request->validate([
@@ -65,10 +81,16 @@ Route::post('/login', function (Request $request) {
     if ($user && Hash::check($request->password, $user->password)) {
         // Create token
         $token = $user->createToken('token_name')->plainTextToken;
-        return response()->json(['token' => $token]);
+        return response()->json(['token' => $token])
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     }
 
-    return response()->json(['message' => 'Invalid credentials'], 401);
+    return response()->json(['message' => 'Invalid credentials'], 401)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 });
 
 // Logout
