@@ -1,0 +1,88 @@
+/* Farmer Instant Buy Container */
+.farmer-instant-buy {
+  min-height: 100vh;
+  background: white;
+  position: relative;
+}
+
+/* Farmer Instant Buy Tabs */
+.farmer-instant-buy-tabs {
+  display: flex;
+  justify-content: center;
+  background: white;
+  border-bottom: 2px solid var(--neutral-200);
+  padding: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.farmer-instant-buy-tabs .tab-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  background: transparent;
+  color: var(--neutral-600);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  position: relative;
+  margin: 0 var(--space-2);
+}
+
+.farmer-instant-buy-tabs .tab-btn:hover {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--primary-green);
+  transform: translateY(-1px);
+}
+
+.farmer-instant-buy-tabs .tab-btn.active {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.farmer-instant-buy-tabs .tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 4px;
+  background: var(--primary-green);
+  border-radius: var(--radius-full);
+}
+
+.farmer-instant-buy-tabs .tab-icon {
+  font-size: var(--font-size-lg);
+}
+
+/* Responsive Design for Tabs */
+@media (max-width: 768px) {
+  .farmer-instant-buy-tabs {
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-2);
+  }
+  
+  .farmer-instant-buy-tabs .tab-btn {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+    margin: 0 var(--space-1);
+  }
+}
+
+@media (max-width: 480px) {
+  .farmer-instant-buy-tabs {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .farmer-instant-buy-tabs .tab-btn {
+    width: 100%;
+    justify-content: center;
+    margin: 0;
+  }
+}

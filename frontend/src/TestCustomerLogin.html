@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Customer Login</title>
+</head>
+<body>
+    <h1>Test Customer Login & API</h1>
+    <div id="results"></div>
+    <script>
+        async function testCustomerLogin() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test login
+                results.innerHTML += '<h2>1. Testing Customer Login</h2>';
+                const loginResponse = await fetch('http://127.0.0.1:8000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'customer@test.com',
+                        password: 'password123'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                results.innerHTML += `<p>Login Status: ${loginResponse.status}</p>`;
+                results.innerHTML += `<p>Token: ${loginData.token}</p>`;
+                
+                if (loginData.token) {
+                    localStorage.setItem('token', loginData.token);
+                    
+                    // Test marketplace API
+                    results.innerHTML += '<h2>2. Testing Marketplace API</h2>';
+                    const marketplaceResponse = await fetch('http://127.0.0.1:8000/api/marketplace/products', {
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${loginData.token}` 
+                        }
+                    });
+                    
+                    const marketplaceData = await marketplaceResponse.json();
+                    results.innerHTML += `<p>Marketplace Status: ${marketplaceResponse.status}</p>`;
+                    results.innerHTML += `<p>Products Count: ${marketplaceData.products?.length || 0}</p>`;
+                    results.innerHTML += `<pre>${JSON.stringify(marketplaceData, null, 2)}</pre>`;
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Run test when page loads
+        testCustomerLogin();
+    </script>
+</body>
+</html>
