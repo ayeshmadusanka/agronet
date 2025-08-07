@@ -88,6 +88,7 @@
 /* Base Styles */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 70px; /* Account for fixed navbar height */
 }
 
 body {
