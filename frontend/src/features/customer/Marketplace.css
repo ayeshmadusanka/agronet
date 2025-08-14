@@ -48,6 +48,20 @@
   gap: var(--space-8);
 }
 
+/* Verified Farmer Badge */
+.verified-farmer {
+  background: linear-gradient(135deg, var(--success-green) 0%, #66BB6A 100%);
+  color: white;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+}
+
 .stat-item {
   display: flex;
   align-items: center;

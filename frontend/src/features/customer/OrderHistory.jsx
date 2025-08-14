@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCustomerOrders } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './OrderHistory.css';
 
 const OrderHistory = () => {
@@ -82,7 +83,7 @@ const OrderHistory = () => {
             <div className="stat-item">
               <span className="stat-icon">💰</span>
               <span className="stat-text">
-                ${orders.reduce((sum, order) => sum + parseFloat(order.total_amount), 0).toFixed(2)} Total
+                {formatCurrency(orders.reduce((sum, order) => sum + parseFloat(order.total_amount), 0))} Total
               </span>
             </div>
           </div>
@@ -117,7 +118,7 @@ const OrderHistory = () => {
                   </div>
                   <div className="order-total">
                     <span className="total-label">Total:</span>
-                    <span className="total-amount">${order.total_amount}</span>
+                    <span className="total-amount">{formatCurrency(order.total_amount)}</span>
                   </div>
                   <div className="order-items-count">
                     <span className="items-icon">🛍️</span>
@@ -156,8 +157,8 @@ const OrderHistory = () => {
                             <span className="quantity-value">{item.quantity}</span>
                           </div>
                           <div className="item-price">
-                            <span className="unit-price">${item.unit_price} each</span>
-                            <span className="total-price">${item.total_price}</span>
+                            <span className="unit-price">{formatCurrency(item.unit_price)} each</span>
+                            <span className="total-price">{formatCurrency(item.total_price)}</span>
                           </div>
                         </div>
                       ))}
@@ -172,15 +173,15 @@ const OrderHistory = () => {
                     <div className="summary-details">
                       <div className="summary-row">
                         <span className="summary-label">Subtotal:</span>
-                        <span className="summary-value">${order.subtotal}</span>
+                        <span className="summary-value">{formatCurrency(order.subtotal)}</span>
                       </div>
                       <div className="summary-row">
                         <span className="summary-label">Platform Fee:</span>
-                        <span className="summary-value">${order.platform_fee}</span>
+                        <span className="summary-value">{formatCurrency(order.platform_fee)}</span>
                       </div>
                       <div className="summary-row total-row">
                         <span className="summary-label">Total:</span>
-                        <span className="summary-value">${order.total_amount}</span>
+                        <span className="summary-value">{formatCurrency(order.total_amount)}</span>
                       </div>
                     </div>
                   </div>

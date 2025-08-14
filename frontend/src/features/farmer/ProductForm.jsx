@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createProduct, updateProduct } from '../../services/instantBuyAPI';
+import { formatPriceInput, parseCurrency } from '../../utils/currencyUtils';
 import './ProductForm.css';
 
 const ProductForm = ({ product, onClose, onSuccess }) => {
@@ -182,7 +183,7 @@ const ProductForm = ({ product, onClose, onSuccess }) => {
               <div className="form-group half-width">
                 <label className="form-label">
                   <span className="label-icon">💵</span>
-                  Price ($)
+                  Price (LKR)
                 </label>
                 <input
                   type="number"

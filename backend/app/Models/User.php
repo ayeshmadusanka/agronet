@@ -20,7 +20,12 @@ class User extends Authenticatable
         'role', 
         'address', 
         'registration_date', 
-        'status'
+        'status',
+        'subscription_tier',
+        'is_verified',
+        'subscription_started_at',
+        'subscription_expires_at',
+        'commission_rate'
     ];
 
     // Hides the password when returning user data
@@ -44,6 +49,29 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    // Check if farmer has pro subscription
+    public function hasProSubscription()
+    {
+        return $this->subscription_tier === 'pro' && 
+               $this->subscription_expires_at && 
+               $this->subscription_expires_at->isFuture();
+    }
+
+    // Check if farmer is verified
+    public function isVerified()
+    {
+        return $this->is_verified;
+    }
+
+    // Get farmer commission rate based on subscription
+    public function getCommissionRate()
+    {
+        if ($this->hasProSubscription()) {
+            return 0.00; // Pro subscribers get 0% commission rate (admin takes 0%)
+        }
+        return 10.00; // Basic subscribers get 10% commission rate (admin takes 10%)
     }
 }
 

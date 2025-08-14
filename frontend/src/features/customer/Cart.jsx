@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCart, updateCartItem, removeFromCart } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './Cart.css';
 
 const Cart = ({ onCheckout }) => {
@@ -112,7 +113,7 @@ const Cart = ({ onCheckout }) => {
                   <h3 className="item-title">{item.product.title}</h3>
                   <p className="item-farmer">by {item.product.farmer?.name || 'Farmer'}</p>
                   <div className="item-price">
-                    <span className="unit-price">${item.product.price} each</span>
+                    <span className="unit-price">{formatCurrency(item.product.price)} each</span>
                   </div>
                 </div>
 
@@ -145,7 +146,7 @@ const Cart = ({ onCheckout }) => {
                   <div className="item-total">
                     <span className="total-label">Total:</span>
                     <span className="total-price">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      {formatCurrency(item.product.price * item.quantity)}
                     </span>
                   </div>
 
@@ -171,17 +172,17 @@ const Cart = ({ onCheckout }) => {
               
               <div className="summary-row">
                 <span className="summary-label">Subtotal:</span>
-                <span className="summary-value">${cartData.subtotal.toFixed(2)}</span>
+                <span className="summary-value">{formatCurrency(cartData.subtotal)}</span>
               </div>
 
               <div className="summary-row">
                 <span className="summary-label">Platform Fee (10%):</span>
-                <span className="summary-value">${cartData.platform_fee.toFixed(2)}</span>
+                <span className="summary-value">{formatCurrency(cartData.platform_fee)}</span>
               </div>
 
               <div className="summary-row total-row">
                 <span className="summary-label">Total:</span>
-                <span className="summary-value total-value">${cartData.total.toFixed(2)}</span>
+                <span className="summary-value total-value">{formatCurrency(cartData.total)}</span>
               </div>
 
               <div className="checkout-section">

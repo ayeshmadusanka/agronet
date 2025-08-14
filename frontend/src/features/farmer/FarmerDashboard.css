@@ -1546,3 +1546,391 @@
     min-width: 120px;
   }
 }
+
+/* Dashboard Components */
+.farmer-dashboard {
+  background: var(--neutral-50);
+  min-height: 100vh;
+}
+
+.verified-badge {
+  background: linear-gradient(135deg, var(--success-green) 0%, #66BB6A 100%);
+  color: white;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  margin-left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.stats-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+}
+
+.stats-card.contracts-card::before {
+  background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--secondary-blue-light) 100%);
+}
+
+.stats-card.sales-card::before {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+}
+
+.stats-card.subscription-card::before {
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+}
+
+.stats-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.card-icon {
+  font-size: var(--font-size-xl);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(45, 80, 22, 0.1);
+  border-radius: var(--radius-lg);
+}
+
+.contracts-card .card-icon {
+  background: rgba(25, 118, 210, 0.1);
+}
+
+.subscription-card .card-icon {
+  background: rgba(124, 77, 255, 0.1);
+}
+
+.card-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin: 0;
+}
+
+.card-content {
+  margin-bottom: var(--space-5);
+}
+
+.stat-number {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-2);
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--neutral-600);
+  margin-bottom: var(--space-3);
+}
+
+.sales-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sales-breakdown small {
+  color: var(--neutral-500);
+  font-size: var(--font-size-xs);
+}
+
+.subscription-tier {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-2);
+  text-transform: capitalize;
+}
+
+.verified-status {
+  color: var(--success-green);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.card-action-btn {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.card-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Subscription Management */
+.farmer-subscription {
+  background: var(--neutral-50);
+  min-height: 100vh;
+}
+
+.subscription-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.plan-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--neutral-200);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.plan-card.current-plan {
+  border-color: var(--primary-green);
+  box-shadow: var(--shadow-lg);
+}
+
+.plan-card.pro-plan {
+  border-color: #7C4DFF;
+}
+
+.plan-card.current-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+}
+
+.plan-card.pro-plan.current-plan::before {
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+}
+
+.plan-header {
+  text-align: center;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--neutral-100);
+}
+
+.plan-header h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--neutral-900);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.plan-price {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--primary-green);
+}
+
+.pro-plan .plan-price {
+  color: #7C4DFF;
+}
+
+.plan-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-features li {
+  padding: var(--space-2) 0;
+  color: var(--neutral-600);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.plan-features li::before {
+  content: '✓';
+  color: var(--success-green);
+  font-weight: bold;
+  font-size: var(--font-size-base);
+}
+
+.current-plan-badge {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%);
+  color: white;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-align: center;
+  margin-top: var(--space-4);
+}
+
+.pro-plan .current-plan-badge {
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+}
+
+.current-plan-badge small {
+  display: block;
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+  opacity: 0.9;
+}
+
+.plan-action-btn {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--space-4);
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+  color: white;
+  border: none;
+}
+
+.upgrade-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.upgrade-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.subscription-actions {
+  text-align: center;
+  margin-top: var(--space-6);
+}
+
+.downgrade-btn {
+  background: white;
+  color: var(--error-red);
+  border: 2px solid var(--error-red);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.downgrade-btn:hover {
+  background: var(--error-red);
+  color: white;
+}
+
+.downgrade-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Update existing verified badge in marketplace */
+.farmer-product-card .verified-farmer {
+  background: linear-gradient(135deg, var(--success-green) 0%, #66BB6A 100%);
+  color: white;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+}
+
+@media (max-width: 768px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .subscription-plans {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .stats-card {
+    padding: var(--space-5);
+  }
+  
+  .stat-number {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .verified-badge {
+    display: block;
+    margin-left: 0;
+    margin-top: var(--space-2);
+    text-align: center;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .sales-breakdown {
+    text-align: center;
+  }
+}

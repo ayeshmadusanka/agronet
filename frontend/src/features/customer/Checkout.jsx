@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { placeOrder } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './Checkout.css';
 
 const Checkout = ({ cartData, onOrderSuccess, onBack }) => {
@@ -220,7 +221,7 @@ const Checkout = ({ cartData, onOrderSuccess, onBack }) => {
                     <span className="item-quantity">× {item.quantity}</span>
                   </div>
                   <span className="item-total">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {formatCurrency(item.product.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -229,17 +230,17 @@ const Checkout = ({ cartData, onOrderSuccess, onBack }) => {
             <div className="summary-totals">
               <div className="summary-row">
                 <span className="summary-label">Subtotal:</span>
-                <span className="summary-value">${cartData.subtotal.toFixed(2)}</span>
+                <span className="summary-value">{formatCurrency(cartData.subtotal)}</span>
               </div>
 
               <div className="summary-row">
                 <span className="summary-label">Platform Fee (10%):</span>
-                <span className="summary-value">${cartData.platform_fee.toFixed(2)}</span>
+                <span className="summary-value">{formatCurrency(cartData.platform_fee)}</span>
               </div>
 
               <div className="summary-row total-row">
                 <span className="summary-label">Total:</span>
-                <span className="summary-value">${cartData.total.toFixed(2)}</span>
+                <span className="summary-value">{formatCurrency(cartData.total)}</span>
               </div>
             </div>
           </div>

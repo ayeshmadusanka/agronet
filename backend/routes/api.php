@@ -561,13 +561,26 @@ Route::middleware(['auth:sanctum', 'farmer'])->delete('/farmer/products/{product
 });
 
 // MARKETPLACE ROUTES (CUSTOMER)
-// Get all active products for marketplace
+// Get all active products for marketplace (prioritize Pro subscribers)
 Route::middleware(['auth:sanctum', 'customer'])->get('/marketplace/products', function (Request $request) {
     try {
-        $products = Product::with('farmer:_id,name')
+        $products = Product::with(['farmer' => function($query) {
+                $query->select('_id', 'name', 'subscription_tier', 'is_verified');
+            }])
             ->active()
-            ->orderBy('created_at', 'desc')
             ->get();
+
+        // Sort products: Pro subscribers first, then by creation date
+        $products = $products->sortBy([
+            function ($product) {
+                // Pro subscribers come first (0), basic subscribers come second (1)
+                return $product->farmer->subscription_tier === 'pro' ? 0 : 1;
+            },
+            function ($product) {
+                // Then sort by creation date (newest first)
+                return -strtotime($product->created_at);
+            }
+        ])->values();
 
         return response()->json(['products' => $products])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -591,7 +604,24 @@ Route::middleware(['auth:sanctum', 'customer'])->get('/cart', function (Request 
             return $item->product->price * $item->quantity;
         });
 
-        $platformFee = $subtotal * 0.10; // 10% platform fee
+        // Calculate platform fee based on each farmer's commission rate
+        $platformFee = 0;
+        $farmerBreakdown = [];
+        
+        foreach ($cartItems as $item) {
+            $farmer = User::find($item->product->farmer_id);
+            $itemTotal = $item->product->price * $item->quantity;
+            $commissionRate = $farmer->getCommissionRate() / 100;
+            $itemCommission = $itemTotal * $commissionRate;
+            $platformFee += $itemCommission;
+            
+            $farmerBreakdown[$farmer->_id] = [
+                'commission_rate' => $farmer->getCommissionRate(),
+                'item_total' => $itemTotal,
+                'commission' => $itemCommission
+            ];
+        }
+        
         $total = $subtotal + $platformFee;
 
         return response()->json([
@@ -730,11 +760,19 @@ Route::middleware(['auth:sanctum', 'customer'])->post('/orders', function (Reque
             return response()->json(['error' => 'Cart is empty'], 400);
         }
 
-        // Calculate totals
+        // Calculate totals with dynamic commission rates
         $subtotal = $cartItems->sum(function ($item) {
             return $item->product->price * $item->quantity;
         });
-        $platformFee = $subtotal * 0.10;
+        
+        $platformFee = 0;
+        foreach ($cartItems as $item) {
+            $farmer = User::find($item->product->farmer_id);
+            $itemTotal = $item->product->price * $item->quantity;
+            $commissionRate = $farmer->getCommissionRate() / 100;
+            $platformFee += $itemTotal * $commissionRate;
+        }
+        
         $total = $subtotal + $platformFee;
 
         // Create order
@@ -883,5 +921,155 @@ Route::middleware(['auth:sanctum', 'farmer'])->put('/farmer/orders/{order}/statu
     } catch (\Exception $e) {
         Log::error('Update order status error: ' . $e->getMessage());
         return response()->json(['error' => 'Failed to update order status'], 500);
+    }
+});
+
+// ==========================================
+// SUBSCRIPTION MANAGEMENT ROUTES
+// ==========================================
+
+// Get farmer's subscription details
+Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/subscription', function (Request $request) {
+    try {
+        $user = Auth::user();
+        $subscription = [
+            'tier' => $user->subscription_tier,
+            'is_verified' => $user->is_verified,
+            'started_at' => $user->subscription_started_at,
+            'expires_at' => $user->subscription_expires_at,
+            'commission_rate' => $user->getCommissionRate(),
+            'has_active_pro' => $user->hasProSubscription()
+        ];
+
+        return response()->json(['subscription' => $subscription]);
+    } catch (\Exception $e) {
+        Log::error('Get subscription error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch subscription details'], 500);
+    }
+});
+
+// Upgrade to Pro subscription
+Route::middleware(['auth:sanctum', 'farmer'])->post('/farmer/subscription/upgrade', function (Request $request) {
+    try {
+        $user = Auth::user();
+        
+        if ($user->hasProSubscription()) {
+            return response()->json(['error' => 'Already have active Pro subscription'], 400);
+        }
+
+        $user->subscription_tier = 'pro';
+        $user->is_verified = true;
+        $user->subscription_started_at = now();
+        $user->subscription_expires_at = now()->addMonth(); // Pro subscription for 1 month
+        $user->commission_rate = 0.00;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Successfully upgraded to Pro subscription!',
+            'subscription' => [
+                'tier' => $user->subscription_tier,
+                'is_verified' => $user->is_verified,
+                'started_at' => $user->subscription_started_at,
+                'expires_at' => $user->subscription_expires_at,
+                'commission_rate' => $user->commission_rate
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Upgrade subscription error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to upgrade subscription'], 500);
+    }
+});
+
+// Downgrade to Basic subscription
+Route::middleware(['auth:sanctum', 'farmer'])->post('/farmer/subscription/downgrade', function (Request $request) {
+    try {
+        $user = Auth::user();
+        
+        $user->subscription_tier = 'basic';
+        $user->is_verified = false;
+        $user->subscription_started_at = now();
+        $user->subscription_expires_at = null;
+        $user->commission_rate = 10.00;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Successfully downgraded to Basic subscription!',
+            'subscription' => [
+                'tier' => $user->subscription_tier,
+                'is_verified' => $user->is_verified,
+                'started_at' => $user->subscription_started_at,
+                'expires_at' => $user->subscription_expires_at,
+                'commission_rate' => $user->commission_rate
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Downgrade subscription error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to downgrade subscription'], 500);
+    }
+});
+
+// Get farmer's stats for dashboard cards
+Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/stats', function (Request $request) {
+    try {
+        $farmer = Auth::user();
+        $farmerId = $farmer->_id;
+        
+        // Get contracts count - check all contracts for applications from this farmer
+        $contractsCount = 0;
+        $allContracts = Contract::all();
+        
+        foreach ($allContracts as $contract) {
+            $applicants = $contract->applicants ?? [];
+            foreach ($applicants as $applicant) {
+                if (isset($applicant['farmer_id']) && $applicant['farmer_id'] == $farmerId) {
+                    $contractsCount++;
+                    break;
+                }
+            }
+        }
+        
+        // Get sales data - check products and orders
+        $farmerProducts = Product::where('farmer_id', $farmerId)->get();
+        $productIds = $farmerProducts->pluck('id')->toArray();
+        
+        // Get order items for farmer's products
+        $orderItems = collect();
+        if (!empty($productIds)) {
+            $orderItems = OrderItem::whereIn('product_id', $productIds)->get();
+        }
+        
+        $totalSales = 0;
+        $salesCount = $orderItems->count();
+        $uniqueOrdersCount = 0;
+        
+        if ($orderItems->count() > 0) {
+            $totalSales = $orderItems->sum('total_price') ?? 0;
+            $uniqueOrdersCount = $orderItems->pluck('order_id')->unique()->count();
+        }
+        
+        // Get commission earned (farmer's share after platform fee)
+        $commissionRate = $farmer->getCommissionRate() / 100;
+        $platformCommission = $totalSales * $commissionRate;
+        $farmerEarnings = $totalSales - $platformCommission;
+        
+        return response()->json([
+            'stats' => [
+                'contracts' => [
+                    'total' => $contractsCount,
+                    'label' => 'Contract Applications'
+                ],
+                'sales' => [
+                    'total_amount' => round($totalSales, 2),
+                    'total_orders' => $uniqueOrdersCount,
+                    'total_items_sold' => $salesCount,
+                    'farmer_earnings' => round($farmerEarnings, 2),
+                    'platform_commission' => round($platformCommission, 2),
+                    'label' => 'Total Sales'
+                ]
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Get farmer stats error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch farmer stats'], 500);
     }
 });

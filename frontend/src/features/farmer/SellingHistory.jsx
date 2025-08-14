@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getFarmerOrders, updateOrderStatus } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './SellingHistory.css';
 
 const SellingHistory = () => {
@@ -150,7 +151,7 @@ const SellingHistory = () => {
             </div>
             <div className="stat-item">
               <span className="stat-icon">💰</span>
-              <span className="stat-text">${totalEarnings.toFixed(2)} Earned</span>
+              <span className="stat-text">{formatCurrency(totalEarnings)} Earned</span>
             </div>
           </div>
         )}
@@ -218,7 +219,7 @@ const SellingHistory = () => {
                   <div className="order-earnings">
                     <span className="earnings-label">Your Earnings:</span>
                     <span className="earnings-amount">
-                      ${items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0).toFixed(2)}
+                      {formatCurrency(items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0))}
                     </span>
                   </div>
                   <div className="order-items-count">
@@ -264,8 +265,8 @@ const SellingHistory = () => {
                             <span className="quantity-value">{item.quantity}</span>
                           </div>
                           <div className="item-price">
-                            <span className="unit-price">${item.unit_price} each</span>
-                            <span className="total-price">${item.total_price}</span>
+                            <span className="unit-price">{formatCurrency(item.unit_price)} each</span>
+                            <span className="total-price">{formatCurrency(item.total_price)}</span>
                           </div>
                         </div>
                       ))}
@@ -283,16 +284,16 @@ const SellingHistory = () => {
                           <div key={item.id} className="earnings-row">
                             <span className="earnings-product">{item.product?.title}</span>
                             <span className="earnings-calculation">
-                              {item.quantity} × ${item.unit_price}
+                              {item.quantity} × {formatCurrency(item.unit_price)}
                             </span>
-                            <span className="earnings-value">${item.total_price}</span>
+                            <span className="earnings-value">{formatCurrency(item.total_price)}</span>
                           </div>
                         ))}
                       </div>
                       <div className="earnings-total">
                         <span className="total-label">Total Earnings:</span>
                         <span className="total-value">
-                          ${items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0).toFixed(2)}
+                          {formatCurrency(items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0))}
                         </span>
                       </div>
                     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMarketplaceProducts, addToCart } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './Marketplace.css';
 
 const Marketplace = () => {
@@ -144,7 +145,12 @@ const Marketplace = () => {
                 <div className="product-meta">
                   <div className="farmer-info">
                     <span className="farmer-icon">👨‍🌾</span>
-                    <span className="farmer-name">by {product.farmer?.name || 'Farmer'}</span>
+                    <span className="farmer-name">
+                      by {product.farmer?.name || 'Farmer'}
+                      {product.farmer?.is_verified && (
+                        <span className="verified-farmer">✓ Verified</span>
+                      )}
+                    </span>
                   </div>
                   <div className="stock-info">
                     <span className="stock-icon">📦</span>
@@ -155,7 +161,7 @@ const Marketplace = () => {
                 <div className="product-footer">
                   <div className="price-section">
                     <span className="price-label">Price</span>
-                    <span className="price-value">${product.price}</span>
+                    <span className="price-value">{formatCurrency(product.price)}</span>
                   </div>
                   
                   <div className="quantity-section">

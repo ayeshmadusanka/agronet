@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getFarmerProducts, deleteProduct } from '../../services/instantBuyAPI';
+import { formatCurrency } from '../../utils/currencyUtils';
 import './ProductList.css';
 
 const ProductList = ({ onCreateProduct, onEditProduct }) => {
@@ -107,7 +108,7 @@ const ProductList = ({ onCreateProduct, onEditProduct }) => {
                 <div className="product-details">
                   <div className="product-price">
                     <span className="price-label">Price:</span>
-                    <span className="price-value">${product.price}</span>
+                    <span className="price-value">{formatCurrency(product.price)}</span>
                   </div>
                   <div className="product-stock">
                     <span className="stock-label">Stock:</span>
