@@ -12,14 +12,23 @@ class User extends Authenticatable
     protected $connection = 'mongodb'; // Force MongoDB connection
     protected $collection = 'users';   // Explicit collection name
 
-    // Add 'district' and 'address' for farmers and customers respectively
+    // Add farmer-specific and driver-specific fields for registration
     protected $fillable = [
-        'name', 
-        'email', 
-        'password', 
-        'role', 
-        'address', 
-        'registration_date', 
+        'name',
+        'email',
+        'password',
+        'role',
+        'address',
+        'phone',
+        'farm_location',
+        'district',
+        'city',
+        'crop_types',
+        'vehicle_type',
+        'license_number',
+        'vehicle_capacity',
+        'experience_years',
+        'registration_date',
         'status',
         'subscription_tier',
         'is_verified',
@@ -49,6 +58,12 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    // Driver
+    public function isDriver()
+    {
+        return $this->role === 'driver';
     }
 
     // Check if farmer has pro subscription

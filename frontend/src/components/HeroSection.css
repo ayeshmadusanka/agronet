@@ -136,5 +136,47 @@
     padding: var(--space-3) var(--space-6);
     font-size: var(--font-size-base);
   }
-  
+
+  .hero-driver-portal {
+    margin-top: 30px;
+  }
+
+}
+
+/* Driver Portal Styles */
+.hero-driver-portal {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  border: 2px solid #e8f5e8;
+}
+
+.driver-text {
+  margin: 0 0 15px 0;
+  color: #2c5530;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.btn-driver {
+  background: linear-gradient(135deg, #2c5530 0%, #4a7c59 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(44, 85, 48, 0.3);
+}
+
+.btn-driver:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(44, 85, 48, 0.4);
+  background: linear-gradient(135deg, #1e3a23 0%, #3a6147 100%);
 }

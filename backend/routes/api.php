@@ -26,25 +26,54 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Register Route
 Route::post('/register', function (Request $request) {
 
-    // Validate incoming request
-    $request->validate([
+    // Base validation rules for all users
+    $rules = [
         'name' => 'required|string',
         'email' => 'required|email|unique:users,email',
         'password' => 'required|string|min:6',
-        'role' => 'required|in:farmer,customer,admin',  // Only 'farmer', 'customer', or 'admin'
+        'role' => 'required|in:farmer,customer,admin',
         'address' => 'required|string',
-    ]);
+    ];
 
-    // Create user
-    $user = User::create([
+    // Additional validation for farmers
+    if ($request->role === 'farmer') {
+        $rules = array_merge($rules, [
+            'phone' => 'required|string',
+            'farm_location' => 'required|string',
+            'district' => 'required|string',
+            'city' => 'required|string',
+            'crop_types' => 'required|array|min:1',
+            'crop_types.*' => 'required|string'
+        ]);
+    }
+
+
+    $request->validate($rules);
+
+    // Create user data
+    $userData = [
         'name' => $request->name,
         'email' => $request->email,
         'password' => Hash::make($request->password),
         'role' => $request->role,
         'address' => $request->address,
         'registration_date' => now(),
-        'status' => $request->role === 'farmer' ? 'pending' : 'approved' // Farmers start as pending
-    ]);
+        'status' => $request->role === 'farmer' ? 'pending' : 'approved'
+    ];
+
+    // Add farmer-specific fields if role is farmer
+    if ($request->role === 'farmer') {
+        $userData = array_merge($userData, [
+            'phone' => $request->phone,
+            'farm_location' => $request->farm_location,
+            'district' => $request->district,
+            'city' => $request->city,
+            'crop_types' => $request->crop_types
+        ]);
+    }
+
+    // Create user (farmer, customer, admin only)
+    $user = User::create($userData);
 
     return response()->json(['message' => 'User registered successfully!', 'user' => $user], 201);
 });
@@ -104,10 +133,12 @@ Route::middleware('auth:sanctum')->post('/logout-current', function (Request $re
 
 
 
-// Farmers Applying for Contracts
-Route::middleware(['auth:sanctum', 'farmer'])->post('/contracts/{contract}/apply', function (Request $request, $contractId) {
+// Farmers Place Bids on Customer Contracts (New Flow)
+Route::middleware(['auth:sanctum', 'farmer'])->post('/contracts/{contract}/bid', function (Request $request, $contractId) {
     $request->validate([
-        'info' => 'required|string' // You can expand this as needed
+        'quantity_offered' => 'required|numeric|min:0.01',
+        'price_per_kilo' => 'required|numeric|min:0.01',
+        'message' => 'nullable|string|max:500'
     ]);
 
     $contract = Contract::find($contractId);
@@ -115,18 +146,38 @@ Route::middleware(['auth:sanctum', 'farmer'])->post('/contracts/{contract}/apply
         return response()->json(['error' => 'Contract not found'], 404);
     }
 
-    // You can store applications in a separate collection or as a field in Contract
-    // Example: Add to contract's applicants array
-    $application = [
+    // Check if contract can receive bids (new method)
+    if (!$contract->canReceiveBids()) {
+        return response()->json(['error' => 'Contract is no longer accepting bids'], 400);
+    }
+
+    // Check if farmer already has a bid on this contract
+    $existingBid = Bid::where('contract_id', $contractId)
+                     ->where('farmer_id', Auth::user()->_id)
+                     ->first();
+
+    if ($existingBid) {
+        return response()->json(['error' => 'You have already placed a bid on this contract'], 400);
+    }
+
+    // Create the bid (total_amount is calculated automatically in model)
+    $bid = Bid::create([
+        'contract_id' => $contractId,
         'farmer_id' => Auth::user()->_id,
-        'info' => $request->info,
-        'applied_at' => now()
-    ];
+        'quantity_offered' => $request->quantity_offered,
+        'price_per_kilo' => $request->price_per_kilo,
+        'message' => $request->message,
+        'status' => 'pending'
+    ]);
 
-    $contract->push('applicants', $application, true); // true for unique
-    $contract->save();
+    // Check if this bid should trigger automatic contract award
+    $contract->refresh(); // Refresh contract data
 
-    return response()->json(['message' => 'Application submitted!', 'application' => $application], 201);
+    return response()->json([
+        'message' => 'Bid placed successfully!',
+        'bid' => $bid->load('farmer'),
+        'contract_awarded' => $contract->status === 'awarded'
+    ], 201);
 });
 
 
@@ -134,58 +185,40 @@ Route::middleware(['auth:sanctum', 'farmer'])->post('/contracts/{contract}/apply
 
 
 
-// Admins Creating Contracts
-Route::middleware(['auth:sanctum', 'admin'])->post('/create_contracts', function (Request $request) {
-    Log::info('Full incoming request:', $request->all());
-    Log::info('Selected farmer_ids:', $request->input('farmer_ids'));
-
+// Customers Create Contracts (Demand for crops) - New Flow
+Route::middleware(['auth:sanctum', 'customer'])->post('/contracts', function (Request $request) {
     // Validate request
     $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255',
+        'title' => 'required|string|max:255',
         'description' => 'required|string',
+        'crop_type' => 'required|string|max:100',
+        'quantity_needed' => 'required|numeric|min:0.01',
+        'preferred_price_per_kilo' => 'required|numeric|min:0.01',
         'deadline' => 'required|date|after:now',
-        'status' => 'required|string|in:pending,active,completed,cancelled',
-        'farmer_ids' => 'sometimes|array|distinct', // Make farmer_ids optional and ensure no duplicates
-        'farmer_ids.*' => 'exists:users,_id,role,farmer', // Validate each farmer exists
+        'location' => 'required|string|max:255'
     ]);
 
     if ($validator->fails()) {
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // Handle farmer_ids (optional)
-    $farmerIds = $request->input('farmer_ids', []);
-    
-    if (!empty($farmerIds)) {
-        // Remove any null values
-        $farmerIds = array_filter($farmerIds, function($id) {
-            return !is_null($id);
-        });
-        
-        if (!empty($farmerIds)) {
-            // Ensure all farmer IDs are valid and belong to farmers
-            $validFarmers = User::whereIn('_id', $farmerIds)->where('role', 'farmer')->pluck('_id')->toArray();
-
-            if (count($validFarmers) !== count($farmerIds)) {
-                return response()->json(['error' => 'One or more farmer IDs are invalid or not farmers.'], 422);
-            }
-        }
-    }
-
-    // Create contract
+    // Create contract with new status flow
     $contract = Contract::create([
-        'name' => $request->input('name'),
+        'title' => $request->input('title'),
         'description' => $request->input('description'),
+        'crop_type' => $request->input('crop_type'),
+        'quantity_needed' => $request->input('quantity_needed'),
+        'preferred_price_per_kilo' => $request->input('preferred_price_per_kilo'),
         'deadline' => $request->input('deadline'),
-        'status' => $request->input('status'),
-        'admin_id' => Auth::user()->_id, // Current authenticated admin
-        'farmers' => $farmerIds, // Store array of farmer IDs (can be empty)
-        'winning_bid_id' => null, // Initialize with no winning bid
+        'location' => $request->input('location'),
+        'status' => 'open', // New contracts start as open for bidding
+        'buyer_id' => Auth::user()->_id,
+        'winning_bid_id' => null
     ]);
 
     return response()->json([
-        'message' => 'Contract created successfully!',
-        'contract' => $contract
+        'message' => 'Contract created successfully! Farmers can now place bids.',
+        'contract' => $contract->load('buyer')
     ], 201);
 });
 
@@ -222,74 +255,214 @@ Route::middleware(['auth:sanctum', 'admin'])->patch('/farmers/{farmer}/reject', 
 
 
 
-// Customers Bidding on Contracts
-Route::middleware(['auth:sanctum', 'customer'])->post('/contracts/{contract}/bid', function (Request $request, $contractId) {
-    $validator = Validator::make($request->all(), [
-        'amount' => 'required|numeric|min:1',
-        'message' => 'nullable|string'
-    ]);
-    if ($validator->fails()) {
-        return response()->json(['error' => $validator->errors()->first()], 400);
-    }
+// Get all open contracts for farmers to view and bid on (New Flow)
+Route::middleware(['auth:sanctum', 'farmer'])->get('/contracts', function (Request $request) {
+    $farmerId = Auth::user()->_id;
 
-    $contract = Contract::find($contractId);
-    if (!$contract) {
-        return response()->json(['error' => 'Contract not found'], 404);
-    }
+    $contracts = Contract::with(['buyer', 'bids'])
+        ->where('status', 'open')
+        ->where('deadline', '>', now()) // Only show contracts that haven't expired
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($contract) use ($farmerId) {
+            $bidCount = $contract->bids->count();
+            $lowestBid = $contract->bids
+                ->where('status', 'pending')
+                ->sortBy('price_per_kilo')
+                ->first();
 
-    $currentHighest = Bid::where('contract_id', $contractId)->max('amount') ?? 0;
-    $amount = $request->amount;
+            // Check if current farmer has already bid
+            $userBid = $contract->bids
+                ->where('farmer_id', $farmerId)
+                ->first();
 
-    if ($amount <= $currentHighest) {
-        return response()->json(['error' => 'Bid must be higher than current highest bid'], 400);
-    }
+            return [
+                'id' => $contract->_id,
+                'title' => $contract->title,
+                'description' => $contract->description,
+                'crop_type' => $contract->crop_type,
+                'quantity_needed' => $contract->quantity_needed,
+                'preferred_price_per_kilo' => $contract->preferred_price_per_kilo,
+                'deadline' => $contract->deadline,
+                'location' => $contract->location,
+                'status' => $contract->status,
+                'status_text' => $contract->getStatusText(),
+                'buyer' => [
+                    'id' => $contract->buyer->_id,
+                    'name' => $contract->buyer->name
+                ],
+                'bid_count' => $bidCount,
+                'lowest_bid' => $lowestBid ? [
+                    'price_per_kilo' => $lowestBid->price_per_kilo,
+                    'quantity_offered' => $lowestBid->quantity_offered
+                ] : null,
+                'user_has_bid' => $userBid ? true : false,
+                'user_bid' => $userBid ? [
+                    'price_per_kilo' => $userBid->price_per_kilo,
+                    'quantity_offered' => $userBid->quantity_offered,
+                    'status' => $userBid->status
+                ] : null,
+                'can_receive_bids' => $contract->canReceiveBids(),
+                'created_at' => $contract->created_at
+            ];
+        });
 
-    $bid = Bid::create([
-        'contract_id' => $contractId,
-        'customer_id' => Auth::user()->_id,
-        'amount' => $amount,
-        'message' => $request->message,
-        'created_at' => now()
-    ]);
-
-    $contract->highest_bid = $amount;
-    $contract->save();
-
-    return response()->json(['message' => 'Bid placed successfully!', 'bid' => $bid], 201);
+    return response()->json(['contracts' => $contracts]);
 });
 
 
 
 
 
-// Get contract details for customers (used in bidding screen)
+// Get customer's own contracts and their bids (New Flow)
+Route::middleware(['auth:sanctum', 'customer'])->get('/my-contracts', function () {
+    $contracts = Contract::with(['bids.farmer', 'winningBid.farmer'])
+        ->where('buyer_id', Auth::user()->_id)
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($contract) {
+            $bids = $contract->bids->map(function ($bid) {
+                return [
+                    'id' => $bid->_id,
+                    'farmer' => [
+                        'id' => $bid->farmer->_id,
+                        'name' => $bid->farmer->name,
+                        'phone' => $bid->farmer->phone ?? 'N/A'
+                    ],
+                    'quantity_offered' => $bid->quantity_offered,
+                    'price_per_kilo' => $bid->price_per_kilo,
+                    'total_amount' => $bid->total_amount,
+                    'message' => $bid->message,
+                    'status' => $bid->status,
+                    'status_text' => $bid->getStatusText(),
+                    'status_color' => $bid->getStatusColor(),
+                    'meets_requirements' => $bid->meetsRequirements(),
+                    'created_at' => $bid->created_at
+                ];
+            })->sortBy('price_per_kilo')->values();
+
+            // Get the lowest qualifying bid
+            $lowestBid = $contract->getLowestQualifiedBid();
+
+            return [
+                'id' => $contract->_id,
+                'title' => $contract->title,
+                'description' => $contract->description,
+                'crop_type' => $contract->crop_type,
+                'quantity_needed' => $contract->quantity_needed,
+                'preferred_price_per_kilo' => $contract->preferred_price_per_kilo,
+                'deadline' => $contract->deadline,
+                'location' => $contract->location,
+                'status' => $contract->status,
+                'status_text' => $contract->getStatusText(),
+                'can_receive_bids' => $contract->canReceiveBids(),
+                'bids' => $bids,
+                'bid_count' => $contract->bids->count(),
+                'pending_bid_count' => $contract->bids->where('status', 'pending')->count(),
+                'winning_bid' => $contract->winningBid ? [
+                    'id' => $contract->winningBid->_id,
+                    'farmer_name' => $contract->winningBid->farmer->name,
+                    'farmer_phone' => $contract->winningBid->farmer->phone ?? 'N/A',
+                    'price_per_kilo' => $contract->winningBid->price_per_kilo,
+                    'quantity_offered' => $contract->winningBid->quantity_offered,
+                    'total_amount' => $contract->winningBid->total_amount
+                ] : null,
+                'lowest_qualifying_bid' => $lowestBid ? [
+                    'price_per_kilo' => $lowestBid->price_per_kilo,
+                    'farmer_name' => $lowestBid->farmer->name
+                ] : null,
+                'created_at' => $contract->created_at
+            ];
+        });
+
+    return response()->json(['contracts' => $contracts]);
+});
+
+// Get contract details with all bids (for customers to view bids on their contract)
 Route::middleware(['auth:sanctum', 'customer'])->get('/contracts/{contract}', function ($contractId) {
-    $contract = Contract::find($contractId);
+    $contract = Contract::with(['bids.farmer', 'buyer'])
+        ->find($contractId);
+
     if (!$contract) {
         return response()->json(['error' => 'Contract not found'], 404);
     }
 
-    // Get highest bid for this contract
-    $highestBid = Bid::where('contract_id', $contractId)
-        ->orderBy('amount', 'desc')
-        ->first();
-
-    // Get bid count
-    $bidCount = Bid::where('contract_id', $contractId)->count();
-
-    $bidder = null;
-    if ($highestBid) {
-        $bidder = User::find($highestBid->customer_id);
+    // Check if the current user owns this contract
+    if ($contract->buyer_id !== Auth::user()->_id) {
+        return response()->json(['error' => 'Unauthorized to view this contract'], 403);
     }
 
-    // Add bid count to contract data
-    $contractData = $contract->toArray();
-    $contractData['bid_count'] = $bidCount;
+    $bids = $contract->bids->sortBy('price_per_kilo')->map(function ($bid) {
+        return [
+            'id' => $bid->_id,
+            'farmer_name' => $bid->farmer->name,
+            'farmer_phone' => $bid->farmer->phone,
+            'quantity_offered' => $bid->quantity_offered,
+            'price_per_kilo' => $bid->price_per_kilo,
+            'total_amount' => $bid->total_amount,
+            'message' => $bid->message,
+            'status' => $bid->status,
+            'created_at' => $bid->created_at
+        ];
+    });
 
     return response()->json([
-        'contract' => $contractData,
-        'highest_bid' => $highestBid,
-        'bidder_name' => $bidder ? $bidder->name : null
+        'contract' => [
+            'id' => $contract->_id,
+            'title' => $contract->title,
+            'description' => $contract->description,
+            'crop_type' => $contract->crop_type,
+            'quantity_needed' => $contract->quantity_needed,
+            'preferred_price_per_kilo' => $contract->preferred_price_per_kilo,
+            'deadline' => $contract->deadline,
+            'location' => $contract->location,
+            'status' => $contract->status,
+            'created_at' => $contract->created_at
+        ],
+        'bids' => $bids,
+        'bid_count' => $contract->bids->count()
+    ]);
+});
+
+// Accept a bid (customer action)
+Route::middleware(['auth:sanctum', 'customer'])->post('/bids/{bid}/accept', function ($bidId) {
+    $bid = Bid::with(['contract', 'farmer'])->find($bidId);
+
+    if (!$bid) {
+        return response()->json(['error' => 'Bid not found'], 404);
+    }
+
+    if ($bid->contract->buyer_id !== Auth::user()->_id) {
+        return response()->json(['error' => 'Unauthorized to accept this bid'], 403);
+    }
+
+    if ($bid->status !== 'pending') {
+        return response()->json(['error' => 'Bid is no longer pending'], 400);
+    }
+
+    // Accept this bid
+    $bid->status = 'accepted';
+    $bid->save();
+
+    // Update contract with winning bid and close it
+    $contract = $bid->contract;
+    $contract->winning_bid_id = $bid->_id;
+    $contract->status = 'completed';
+    $contract->save();
+
+    // Reject all other bids for this contract
+    Bid::where('contract_id', $contract->_id)
+        ->where('_id', '!=', $bid->_id)
+        ->update(['status' => 'rejected']);
+
+    return response()->json([
+        'message' => 'Bid accepted successfully!',
+        'bid' => $bid,
+        'farmer_contact' => [
+            'name' => $bid->farmer->name,
+            'phone' => $bid->farmer->phone,
+            'email' => $bid->farmer->email
+        ]
     ]);
 });
 
@@ -1014,19 +1187,8 @@ Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/stats', function (Re
         $farmer = Auth::user();
         $farmerId = $farmer->_id;
         
-        // Get contracts count - check all contracts for applications from this farmer
-        $contractsCount = 0;
-        $allContracts = Contract::all();
-        
-        foreach ($allContracts as $contract) {
-            $applicants = $contract->applicants ?? [];
-            foreach ($applicants as $applicant) {
-                if (isset($applicant['farmer_id']) && $applicant['farmer_id'] == $farmerId) {
-                    $contractsCount++;
-                    break;
-                }
-            }
-        }
+        // Get contracts count - number of bids this farmer has placed
+        $contractsCount = Bid::where('farmer_id', $farmerId)->count();
         
         // Get sales data - check products and orders
         $farmerProducts = Product::where('farmer_id', $farmerId)->get();
@@ -1071,5 +1233,305 @@ Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/stats', function (Re
     } catch (\Exception $e) {
         Log::error('Get farmer stats error: ' . $e->getMessage());
         return response()->json(['error' => 'Failed to fetch farmer stats'], 500);
+    }
+});
+
+// ============================================
+// NEW ORDER & APPROVAL FLOW ROUTES
+// ============================================
+
+// Get orders awaiting farmer approval (for farmers)
+Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/pending-orders', function (Request $request) {
+    try {
+        $farmer = Auth::user();
+
+        // Find orders that contain this farmer's products and need approval
+        $orders = Order::whereIn('status', ['pending', 'farmer_approved'])
+            ->whereHas('orderItems.product', function ($query) use ($farmer) {
+                $query->where('farmer_id', $farmer->_id);
+            })
+            ->with(['orderItems.product', 'customer'])
+            ->get()
+            ->filter(function ($order) use ($farmer) {
+                $approvals = $order->farmer_approval_status ?? [];
+                return !isset($approvals[$farmer->_id]); // Only show orders not yet approved/rejected by this farmer
+            });
+
+        $formattedOrders = $orders->map(function ($order) use ($farmer) {
+            $farmerItems = $order->orderItems->filter(function ($item) use ($farmer) {
+                return $item->product->farmer_id === $farmer->_id;
+            });
+
+            return [
+                'id' => $order->_id,
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer->name,
+                'customer_phone' => $order->customer->phone ?? 'Not provided',
+                'status' => $order->status,
+                'total_amount' => $order->total_amount,
+                'shipping_address' => $order->shipping_address,
+                'created_at' => $order->created_at,
+                'farmer_items' => $farmerItems->map(function ($item) {
+                    return [
+                        'product_name' => $item->product->name,
+                        'quantity' => $item->quantity,
+                        'unit' => $item->product->unit ?? 'kg',
+                        'price_per_unit' => $item->price_per_unit,
+                        'total_price' => $item->total_price
+                    ];
+                })->values()
+            ];
+        })->values();
+
+        return response()->json([
+            'orders' => $formattedOrders
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Get pending orders error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch pending orders'], 500);
+    }
+});
+
+// Farmer approve/reject order
+Route::middleware(['auth:sanctum', 'farmer'])->post('/farmer/orders/{orderId}/respond', function (Request $request, $orderId) {
+    $validator = Validator::make($request->all(), [
+        'action' => 'required|string|in:approve,reject',
+        'notes' => 'nullable|string|max:500',
+        'rejection_reason' => 'required_if:action,reject|string|max:255'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    try {
+        $farmer = Auth::user();
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        // Check if farmer has items in this order
+        $hasItems = $order->orderItems()
+            ->whereHas('product', function ($query) use ($farmer) {
+                $query->where('farmer_id', $farmer->_id);
+            })
+            ->exists();
+
+        if (!$hasItems) {
+            return response()->json(['error' => 'You do not have items in this order'], 403);
+        }
+
+        // Update farmer approval status
+        $approvals = $order->farmer_approval_status ?? [];
+        $approvals[$farmer->_id] = [
+            'status' => $request->action === 'approve' ? 'approved' : 'rejected',
+            'notes' => $request->notes,
+            'responded_at' => now(),
+            'rejection_reason' => $request->action === 'reject' ? $request->rejection_reason : null
+        ];
+
+        $order->farmer_approval_status = $approvals;
+        if ($request->action === 'reject') {
+            $order->rejection_reason = $request->rejection_reason;
+        }
+        $order->save();
+
+        // Update overall order status based on all farmer responses
+        $order->updateStatusBasedOnApprovals();
+
+        return response()->json([
+            'message' => $request->action === 'approve' ? 'Order approved successfully' : 'Order rejected successfully',
+            'order_status' => $order->status
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Order response error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to process order response'], 500);
+    }
+});
+
+// Get approved orders for farmer (ready to mark as ready for pickup)
+Route::middleware(['auth:sanctum', 'farmer'])->get('/farmer/approved-orders', function (Request $request) {
+    try {
+        $farmer = Auth::user();
+
+        $orders = Order::where('status', 'farmer_approved')
+            ->whereHas('orderItems.product', function ($query) use ($farmer) {
+                $query->where('farmer_id', $farmer->_id);
+            })
+            ->with(['orderItems.product', 'customer'])
+            ->get();
+
+        $formattedOrders = $orders->map(function ($order) use ($farmer) {
+            $farmerItems = $order->orderItems->filter(function ($item) use ($farmer) {
+                return $item->product->farmer_id === $farmer->_id;
+            });
+
+            return [
+                'id' => $order->_id,
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer->name,
+                'customer_phone' => $order->customer->phone ?? 'Not provided',
+                'status' => $order->status,
+                'total_amount' => $order->total_amount,
+                'shipping_address' => $order->shipping_address,
+                'created_at' => $order->created_at,
+                'farmer_items' => $farmerItems->map(function ($item) {
+                    return [
+                        'product_name' => $item->product->name,
+                        'quantity' => $item->quantity,
+                        'unit' => $item->product->unit ?? 'kg',
+                        'price_per_unit' => $item->price_per_unit,
+                        'total_price' => $item->total_price
+                    ];
+                })->values(),
+                'approval_info' => $order->farmer_approval_status[$farmer->_id] ?? null
+            ];
+        })->values();
+
+        return response()->json([
+            'orders' => $formattedOrders
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Get approved orders error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch approved orders'], 500);
+    }
+});
+
+// Mark order as ready for pickup
+Route::middleware(['auth:sanctum', 'farmer'])->post('/farmer/orders/{orderId}/ready-for-pickup', function (Request $request, $orderId) {
+    $validator = Validator::make($request->all(), [
+        'notes' => 'nullable|string|max:500'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
+
+    try {
+        $farmer = Auth::user();
+        $order = Order::find($orderId);
+
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        if ($order->status !== 'farmer_approved') {
+            return response()->json(['error' => 'Order is not in approved status'], 400);
+        }
+
+        // Check if farmer has items in this order
+        $hasItems = $order->orderItems()
+            ->whereHas('product', function ($query) use ($farmer) {
+                $query->where('farmer_id', $farmer->_id);
+            })
+            ->exists();
+
+        if (!$hasItems) {
+            return response()->json(['error' => 'You do not have items in this order'], 403);
+        }
+
+        // Mark order as ready for pickup
+        $order->markReadyForPickup($request->notes);
+
+        $response = [
+            'message' => 'Order marked as ready for pickup',
+            'order' => [
+                'id' => $order->_id,
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'ready_for_pickup_at' => $order->ready_for_pickup_at,
+                'farmer_notes' => $order->farmer_notes
+            ]
+        ];
+
+
+        return response()->json($response);
+    } catch (\Exception $e) {
+        Log::error('Mark ready for pickup error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to mark order as ready for pickup'], 500);
+    }
+});
+
+
+// Get order tracking details (for customers)
+Route::middleware(['auth:sanctum', 'customer'])->get('/customer/orders/{orderId}/tracking', function (Request $request, $orderId) {
+    try {
+        $customer = Auth::user();
+        $order = Order::where('_id', $orderId)
+            ->where('customer_id', $customer->_id)
+            ->with(['orderItems.product.farmer'])
+            ->first();
+
+        if (!$order) {
+            return response()->json(['error' => 'Order not found'], 404);
+        }
+
+        // Get farmer approval statuses
+        $farmerApprovals = [];
+        $farmers = $order->getFarmers();
+        foreach ($farmers as $farmer) {
+            $approval = $order->farmer_approval_status[$farmer->_id] ?? null;
+            $farmerApprovals[] = [
+                'farmer_name' => $farmer->name,
+                'farmer_phone' => $farmer->phone,
+                'status' => $approval['status'] ?? 'pending',
+                'notes' => $approval['notes'] ?? null,
+                'responded_at' => $approval['responded_at'] ?? null,
+                'rejection_reason' => $approval['rejection_reason'] ?? null
+            ];
+        }
+
+        $trackingData = [
+            'order' => [
+                'id' => $order->_id,
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'total_amount' => $order->total_amount,
+                'created_at' => $order->created_at,
+                'farmer_notes' => $order->farmer_notes,
+            ],
+            'timeline' => [
+                [
+                    'status' => 'Order Placed',
+                    'timestamp' => $order->created_at,
+                    'completed' => true,
+                    'description' => 'Your order has been placed successfully'
+                ],
+                [
+                    'status' => 'Farmer Approval',
+                    'timestamp' => $order->status === 'farmer_approved' ?
+                        collect($order->farmer_approval_status ?? [])->max('responded_at') : null,
+                    'completed' => in_array($order->status, ['farmer_approved', 'ready_for_pickup', 'delivered', 'completed']),
+                    'description' => $order->status === 'farmer_rejected' ? 'Order was rejected by farmer' : 'Waiting for farmer approval'
+                ],
+                [
+                    'status' => 'Ready for Pickup',
+                    'timestamp' => $order->ready_for_pickup_at,
+                    'completed' => in_array($order->status, ['ready_for_pickup', 'delivered', 'completed']),
+                    'description' => 'Order is prepared and ready for pickup'
+                ],
+                [
+                    'status' => 'Delivered',
+                    'timestamp' => $order->delivered_at,
+                    'completed' => in_array($order->status, ['delivered', 'completed']),
+                    'description' => 'Order has been delivered'
+                ],
+                [
+                    'status' => 'Completed',
+                    'timestamp' => $order->completed_at,
+                    'completed' => $order->status === 'completed',
+                    'description' => 'Order is complete'
+                ]
+            ],
+            'farmer_approvals' => $farmerApprovals
+        ];
+
+
+        return response()->json($trackingData);
+    } catch (\Exception $e) {
+        Log::error('Get order tracking error: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch order tracking'], 500);
     }
 });

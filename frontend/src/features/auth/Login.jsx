@@ -23,15 +23,22 @@ const Login = ({ onLogin, switchToRegister }) => {
       const res = await login(form.email, form.password);
       localStorage.setItem('token', res.data.token);
 
-      // Fetch user info to get the role
-      const userRes = await fetch(`${process.env.REACT_APP_API_URL}/user`, {
-        headers: { Authorization: `Bearer ${res.data.token}` }
-      });
-      const userData = await userRes.json();
-      console.log('User data:', userData);
-      localStorage.setItem('role', userData.role);
-
-      window.location.href = '/dashboard'; // Redirect to dashboard page
+      // Use the user_type from login response if available, otherwise fetch user info
+      if (res.data.user_type) {
+        localStorage.setItem('role', res.data.user_type);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        window.location.href = '/dashboard'; // Redirect to dashboard page
+      } else {
+        // Fallback: Fetch user info to get the role (for backward compatibility)
+        const userRes = await fetch(`${process.env.REACT_APP_API_URL}/user`, {
+          headers: { Authorization: `Bearer ${res.data.token}` }
+        });
+        const userData = await userRes.json();
+        console.log('User data:', userData);
+        localStorage.setItem('role', userData.role || 'user');
+        localStorage.setItem('user', JSON.stringify(userData));
+        window.location.href = '/dashboard'; // Redirect to dashboard page
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }

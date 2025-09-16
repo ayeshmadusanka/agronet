@@ -1,0 +1,832 @@
+/* Modern Contract Card Styles */
+.contract-card-modern {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contract-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Header Section */
+.contract-header-modern {
+  margin-bottom: 20px;
+}
+
+.contract-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.contract-title-modern {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.status-badge-modern {
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.contract-meta-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.crop-tag { background: #f0fff4; border-color: #9ae6b4; color: #276749; }
+.quantity-tag { background: #fffaf0; border-color: #fbd38d; color: #744210; }
+.price-tag { background: #f0f4ff; border-color: #a3bffa; color: #3c366b; }
+
+/* Quick Info Section */
+.contract-quick-info {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-icon {
+  font-size: 1.1rem;
+}
+
+.info-text {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Bid Summary Section */
+.bid-summary-modern {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.summary-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2d3748;
+}
+
+.bid-count-badge {
+  background: #3182ce;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.best-bid-highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.best-bid-label {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.best-bid-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.best-bid-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.best-bid-farmer {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* Winning Bid Section */
+.winning-bid-modern {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.winning-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.winning-header h4 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.winning-icon {
+  font-size: 1.5rem;
+}
+
+.winning-farmer-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.farmer-avatar {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farmer-details {
+  flex: 1;
+}
+
+.farmer-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.farmer-contact {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.winning-amount {
+  text-align: right;
+}
+
+.amount-label {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.amount-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Bids Section */
+.bids-section-modern {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.bids-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.bids-header h4 {
+  margin: 0;
+  color: #2d3748;
+}
+
+.bids-count {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.bids-list-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bid-card-modern {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.bid-card-modern:hover {
+  border-color: #cbd5e0;
+}
+
+.bid-card-modern.best-bid {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);
+}
+
+.bid-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.farmer-info-modern {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.farmer-avatar-small {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  background: #f7fafc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farmer-name-modern {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.best-badge {
+  background: #ffd700;
+  color: #744210;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.bid-price-modern {
+  text-align: right;
+}
+
+.price-amount {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.total-amount {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.bid-details-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.quantity-offered {
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.bid-status-modern {
+  display: flex;
+  align-items: center;
+}
+
+.status-chip {
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.bid-message-modern {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #f7fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.message-icon {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.message-text {
+  color: #4a5568;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.bid-actions-modern {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.accept-bid-btn {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.accept-bid-btn:hover:not(:disabled) {
+  background: #38a169;
+}
+
+.accept-bid-btn:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+.insufficient-warning-modern {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+/* No Bids State */
+.no-bids-modern {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f7fafc;
+  border-radius: 12px;
+  color: #6b7280;
+}
+
+.no-bids-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.no-bids-text h4 {
+  margin: 0 0 8px 0;
+  color: #4a5568;
+}
+
+.no-bids-text p {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Contract Creation and Management Styles */
+.create-contract, .my-contracts {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.dashboard-header h2 {
+  color: #2c5530;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Form Styles */
+.form-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.contract-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #2c5530;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Contract Cards */
+.contracts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.contract-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.contract-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.contract-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.contract-header h3 {
+  color: #2c5530;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.urgent-badge {
+  background: linear-gradient(135deg, #FF6B6B, #FF5252);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.contract-details {
+  margin-bottom: 1rem;
+}
+
+.contract-details p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.contract-details strong {
+  color: #2c5530;
+  font-weight: 600;
+}
+
+/* Bid Sections */
+.bid-summary {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.bid-count {
+  text-align: center;
+}
+
+.bid-count .count {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.bid-count .label {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.bids-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.bids-section h4 {
+  color: #2c5530;
+  margin-bottom: 1rem;
+}
+
+.bids-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bid-item {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.bid-info {
+  flex: 1;
+}
+
+.bid-info strong {
+  color: #2c5530;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.bid-details {
+  color: #4CAF50;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.total-amount {
+  color: #2196F3;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.bid-message {
+  color: #666;
+  font-style: italic;
+  margin: 0.5rem 0 0 0;
+  font-size: 0.9rem;
+}
+
+.bid-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.bid-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.bid-status.pending {
+  background: #FFF3E0;
+  color: #F57C00;
+}
+
+.bid-status.accepted {
+  background: #E8F5E8;
+  color: #2E7D32;
+}
+
+.bid-status.rejected {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.accept-bid-btn {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.accept-bid-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.accept-bid-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Info Box */
+.info-box {
+  background: linear-gradient(135deg, #E8F5E8, #F1F8E9);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid #4CAF50;
+}
+
+.info-box h3 {
+  color: #2c5530;
+  margin-bottom: 1rem;
+}
+
+.info-box ol {
+  color: #555;
+  line-height: 1.6;
+}
+
+.info-box ol li {
+  margin-bottom: 0.5rem;
+}
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #666;
+}
+
+.empty-state h3 {
+  color: #2c5530;
+  margin-bottom: 1rem;
+}
+
+/* Messages */
+.error-message {
+  background: #FFEBEE;
+  color: #C62828;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 4px solid #F44336;
+}
+
+.success-message {
+  background: #E8F5E8;
+  color: #2E7D32;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 4px solid #4CAF50;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* No bids state */
+.no-bids {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .create-contract, .my-contracts {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contracts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bid-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bid-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+}
